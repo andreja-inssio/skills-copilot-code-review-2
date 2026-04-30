@@ -1084,23 +1084,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       let url, method;
-      const params = new URLSearchParams({
+      const payload = {
         message,
         expiration_date: expiry,
         teacher_username: currentUser.username,
-      });
-      if (start) params.set("start_date", start);
+      };
+      if (start) payload.start_date = start;
 
       if (id) {
-        url = `/announcements/${encodeURIComponent(id)}?${params}`;
+        url = `/announcements/${encodeURIComponent(id)}`;
         method = "PUT";
       } else {
-        url = `/announcements?${params}`;
+        url = `/announcements`;
         method = "POST";
       }
 
-      const res = await fetch(url, { method });
-      const data = await res.json();
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        data = {};
+      }
       if (!res.ok) {
         showFormError(data.detail || "Failed to save announcement.");
         return;
