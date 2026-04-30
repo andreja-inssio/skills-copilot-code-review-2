@@ -40,16 +40,21 @@ def _parse_object_id(announcement_id: str) -> ObjectId:
 
 def _validate_dates(expiration_date: str, start_date: Optional[str]) -> None:
     try:
-        date.fromisoformat(expiration_date)
+        parsed_expiration_date = date.fromisoformat(expiration_date)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid expiration_date format (expected YYYY-MM-DD)")
+
     if start_date:
         try:
-            date.fromisoformat(start_date)
+            parsed_start_date = date.fromisoformat(start_date)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid start_date format (expected YYYY-MM-DD)")
 
-
+        if parsed_start_date > parsed_expiration_date:
+            raise HTTPException(
+                status_code=400,
+                detail="start_date must be on or before expiration_date"
+            )
 @router.get("", response_model=List[Dict[str, Any]])
 def get_active_announcements() -> List[Dict[str, Any]]:
     """
